@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
 const FIELD_LABELS = {
@@ -102,22 +102,98 @@ function formatCellValue(value) {
 }
 
 function SelectedResults({ data, selectedFields, fileName, onBack, onReset }) {
-  const handleExportExcel = () => {
-    const exportData = data.map(row => {
-      const filtered = {};
-      selectedFields.forEach(field => {
-        filtered[getColumnLabel(field)] = row[field] ?? '';
-      });
-      return filtered;
+  const handleExportExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Hoja de Ruta');
+
+    // 1. Título principal
+    sheet.mergeCells('A1:F2');
+    const titleCell = sheet.getCell('A1');
+    titleCell.value = 'HOJA DE RUTA CACMU';
+    titleCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF000000' } };
+    titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+    // 2. Información de cabecera
+    sheet.getCell('A4').value = 'Fecha de reporte:';
+    sheet.getCell('A4').font = { bold: true };
+    sheet.getCell('B4').value = new Date().toLocaleDateString('es-ES');
+
+    sheet.getCell('A5').value = 'Asesor:';
+    sheet.getCell('A5').font = { bold: true };
+
+    sheet.getCell('A6').value = 'Fecha de emisión:';
+    sheet.getCell('A6').font = { bold: true };
+    sheet.getCell('B6').value = new Date().toLocaleDateString('es-ES');
+
+    // 3. Fila de Encabezados de la Tabla
+    // Las columnas que el usuario seleccionó, más las 2 nuevas
+    const headers = ['#', ...selectedFields.map(getColumnLabel), 'HORA A LA QUE FUE VISITADO', 'OBSERVACIÓN'];
+    
+    // Insertamos la cabecera en la fila 8 (dejando la 7 vacía por estética, o directo en la 8 como el original)
+    const headerRowIndex = 8;
+    const headerRow = sheet.getRow(headerRowIndex);
+    headerRow.values = headers;
+    headerRow.height = 30; // Hacerla más alta para que el texto envuelto se vea bien
+
+    headerRow.eachCell((cell, colNumber) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+      // Fondo azul corporativo CACMU
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E78' } }; 
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
     });
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Reporte Final');
+    // 4. Llenar los datos
+    let currentRow = headerRowIndex + 1;
+    data.forEach((row, index) => {
+      const rowData = [
+        index + 1,
+        ...selectedFields.map(f => {
+          const val = row[f];
+          return (val === null || val === undefined) ? '' : String(val);
+        }),
+        '', // HORA A LA QUE FUE VISITADO
+        ''  // OBSERVACION
+      ];
+      
+      const dataRow = sheet.getRow(currentRow);
+      dataRow.values = rowData;
+      
+      // Estilos para celdas de datos
+      dataRow.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        cell.alignment = { vertical: 'middle', wrapText: true };
+        cell.font = { size: 10 };
+      });
+      
+      currentRow++;
+    });
 
-    const wbOut = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbOut], { type: 'application/octet-stream' });
-    saveAs(blob, `CACMU_Reporte_Final_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    // 5. Ajustar el ancho de las columnas
+    sheet.columns.forEach((col, i) => {
+      if (i === 0) {
+        col.width = 5; // Columna '#'
+      } else if (i === sheet.columns.length - 1) {
+        col.width = 35; // Columna 'Observación'
+      } else {
+        col.width = 18; // Ancho estándar para el resto
+      }
+    });
+
+    // Descargar el archivo
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, `Hoja_de_Ruta_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   return (

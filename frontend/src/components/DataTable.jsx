@@ -364,9 +364,25 @@ function DataTable({ data, selectedFields, fileName, onBack, onReset, onAcceptSe
         const aVal = a[sortField] ?? '';
         const bVal = b[sortField] ?? '';
 
-        const aNum = Number(aVal);
-        const bNum = Number(bVal);
-        if (!isNaN(aNum) && !isNaN(bNum) && aVal !== '' && bVal !== '') {
+        const parseNumber = (val) => {
+          if (typeof val === 'number') return val;
+          if (!val) return NaN;
+          let str = String(val).trim();
+          // Check for Latin format (e.g. 1.200,50)
+          if (/^-?\d{1,3}(\.\d{3})*(,\d+)?$/.test(str)) {
+            str = str.replace(/\./g, '').replace(',', '.');
+          } 
+          // Check for US format (e.g. 1,200.50)
+          else if (/^-?\d{1,3}(,\d{3})*(\.\d+)?$/.test(str)) {
+            str = str.replace(/,/g, '');
+          }
+          return Number(str);
+        };
+
+        const aNum = parseNumber(aVal);
+        const bNum = parseNumber(bVal);
+        
+        if (!isNaN(aNum) && !isNaN(bNum) && String(aVal).trim() !== '' && String(bVal).trim() !== '') {
           return sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
         }
 
