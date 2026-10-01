@@ -1281,6 +1281,21 @@
   font-size: var(--font-size-sm);
 }
 
+.data-table tbody tr.row-selected {
+  background: var(--color-accent-glow);
+}
+
+.data-table tbody tr.row-selected td {
+  color: var(--color-text-primary);
+}
+
+.row-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
 /* ===== Empty State ===== */
 .empty-tags {
   font-size: var(--font-size-sm);

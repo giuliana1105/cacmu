@@ -261,13 +261,14 @@ function ColumnFilterDropdown({ field, uniqueValues, activeFilters, onFilterChan
 
 const ROWS_PER_PAGE = 25;
 
-function DataTable({ data, selectedFields, fileName, onBack, onReset }) {
+function DataTable({ data, selectedFields, fileName, onBack, onReset, onAcceptSelection }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState(null);
   const [sortDirection, setSortDirection] = useState('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [columnFilters, setColumnFilters] = useState({}); // { field: [selectedValues] }
   const [openFilter, setOpenFilter] = useState(null); // which field's filter dropdown is open
+  const [selectedRowRefs, setSelectedRowRefs] = useState(new Set()); // selected row objects
 
   // Compute which columns are filterable
   const filterableColumns = useMemo(() => getFilterableColumns(data, selectedFields), [data, selectedFields]);
@@ -310,6 +311,25 @@ function DataTable({ data, selectedFields, fileName, onBack, onReset }) {
   const clearAllFilters = () => {
     setColumnFilters({});
     setCurrentPage(1);
+    setSelectedRowRefs(new Set()); // Also clear selection on major changes
+  };
+
+  const toggleRowSelection = (row) => {
+    const newSet = new Set(selectedRowRefs);
+    if (newSet.has(row)) {
+      newSet.delete(row);
+    } else {
+      newSet.add(row);
+    }
+    setSelectedRowRefs(newSet);
+  };
+
+  const handleSelectAll = (isAllSelected) => {
+    if (isAllSelected) {
+      setSelectedRowRefs(new Set());
+    } else {
+      setSelectedRowRefs(new Set(filteredData));
+    }
   };
 
   const filteredData = useMemo(() => {
@@ -449,6 +469,15 @@ function DataTable({ data, selectedFields, fileName, onBack, onReset }) {
             />
           </div>
 
+          {selectedRowRefs.size > 0 && (
+            <button className="btn btn-primary" onClick={() => onAcceptSelection(Array.from(selectedRowRefs))} id="btn-accept-selection">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Continuar con {selectedRowRefs.size} selec.
+            </button>
+          )}
+
           <button className="btn btn-secondary" onClick={onBack} id="btn-back-results">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12" />
@@ -457,7 +486,7 @@ function DataTable({ data, selectedFields, fileName, onBack, onReset }) {
             Cambiar campos
           </button>
 
-          <button className="btn btn-primary" onClick={handleExportExcel} id="btn-export">
+          <button className="btn btn-secondary" onClick={handleExportExcel} id="btn-export">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
@@ -475,6 +504,15 @@ function DataTable({ data, selectedFields, fileName, onBack, onReset }) {
               <table className="data-table" id="results-table">
                 <thead>
                   <tr>
+                    <th style={{ width: '40px', textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedRowRefs.size === filteredData.length && filteredData.length > 0}
+                        onChange={() => handleSelectAll(selectedRowRefs.size === filteredData.length && filteredData.length > 0)}
+                        className="row-checkbox"
+                        title="Seleccionar todo"
+                      />
+                    </th>
                     <th style={{ width: '50px', textAlign: 'center' }}>#</th>
                     {selectedFields.map(field => {
                       const isFilterable = !!filterableColumns[field];
@@ -530,12 +568,20 @@ function DataTable({ data, selectedFields, fileName, onBack, onReset }) {
                 </thead>
                 <tbody>
                   {paginatedData.map((row, index) => (
-                    <tr key={index}>
+                    <tr key={index} className={selectedRowRefs.has(row) ? 'row-selected' : ''}>
+                      <td style={{ textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedRowRefs.has(row)}
+                          onChange={() => toggleRowSelection(row)}
+                          className="row-checkbox"
+                        />
+                      </td>
                       <td className="row-number">
                         {(currentPage - 1) * ROWS_PER_PAGE + index + 1}
                       </td>
                       {selectedFields.map(field => (
-                        <td key={field} title={String(row[field] ?? '')}>
+                        <td key={field} title={String(row[field] ?? '')} onClick={() => toggleRowSelection(row)} style={{ cursor: 'pointer' }}>
                           {formatCellValue(row[field])}
                         </td>
                       ))}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import UploadScreen from './components/UploadScreen';
 import FieldSelector from './components/FieldSelector';
 import DataTable from './components/DataTable';
+import SelectedResults from './components/SelectedResults';
 import Header from './components/Header';
 import './App.css';
 
@@ -10,6 +11,7 @@ function App() {
     const [excelData, setExcelData] = useState(null);
     const [columns, setColumns] = useState([]);
     const [selectedFields, setSelectedFields] = useState([]);
+    const [selectedRows, setSelectedRows] = useState([]);
     const [fileName, setFileName] = useState('');
 
     const handleFileLoaded = (data, cols, name) => {
@@ -24,8 +26,16 @@ function App() {
         setCurrentStep(3);
     };
 
+    const handleRowsSelected = (rows) => {
+        setSelectedRows(rows);
+        setCurrentStep(4);
+    };
+
     const handleBack = () => {
-        if (currentStep === 3) {
+        if (currentStep === 4) {
+            setCurrentStep(3);
+            setSelectedRows([]);
+        } else if (currentStep === 3) {
             setCurrentStep(2);
         } else if (currentStep === 2) {
             setCurrentStep(1);
@@ -41,6 +51,7 @@ function App() {
         setExcelData(null);
         setColumns([]);
         setSelectedFields([]);
+        setSelectedRows([]);
         setFileName('');
     };
 
@@ -74,6 +85,16 @@ function App() {
                             fileName={fileName}
                             onBack={handleBack}
                             onReset={handleReset}
+                            onAcceptSelection={handleRowsSelected}
+                        />
+                    )}
+                    {currentStep === 4 && (
+                        <SelectedResults
+                            data={selectedRows}
+                            selectedFields={selectedFields}
+                            fileName={fileName}
+                            onBack={handleBack}
+                            onReset={handleReset}
                         />
                     )}
                 </div>
@@ -86,7 +107,8 @@ function StepIndicator({ currentStep }) {
     const steps = [
         { num: 1, label: 'Cargar Archivo', icon: '📁' },
         { num: 2, label: 'Seleccionar Campos', icon: '✅' },
-        { num: 3, label: 'Ver Resultados', icon: '📊' },
+        { num: 3, label: 'Filtrar y Seleccionar', icon: '✅' },
+        { num: 4, label: 'Reporte Final', icon: '📊' },
     ];
 
     return (
