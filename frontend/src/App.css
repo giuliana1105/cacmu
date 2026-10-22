@@ -1304,6 +1304,16 @@
 }
 
 /* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .app-header {
+    padding: var(--space-3) var(--space-4);
+  }
+  
+  .data-table-actions {
+    flex-wrap: wrap;
+  }
+}
+
 @media (max-width: 768px) {
   .app-main {
     padding: var(--space-4) var(--space-3);
@@ -1332,35 +1342,53 @@
   }
 
   .dropzone {
-    padding: var(--space-10) var(--space-4);
+    padding: var(--space-8) var(--space-4);
   }
 
   .field-grid {
     grid-template-columns: 1fr;
+    max-height: 40vh;
   }
 
   .field-selector-toolbar {
     flex-direction: column;
     align-items: stretch;
+    gap: var(--space-4);
+  }
+  
+  .field-search input {
+    width: 100%;
   }
 
   .field-selector-footer {
     flex-direction: column;
     gap: var(--space-4);
+    align-items: stretch;
   }
 
   .field-selector-actions {
     width: 100%;
-    justify-content: stretch;
+    flex-direction: column;
   }
 
   .field-selector-actions .btn {
-    flex: 1;
+    width: 100%;
   }
 
   .data-table-header {
     flex-direction: column;
     align-items: stretch;
+    gap: var(--space-4);
+  }
+
+  .data-table-title-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .data-table-stats {
+    flex-wrap: wrap;
   }
 
   .data-table-search input {
@@ -1368,13 +1396,24 @@
   }
 
   .data-table-actions {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .data-table-actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .table-footer {
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--space-4);
     text-align: center;
+  }
+  
+  .table-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .header-subtitle {
@@ -1382,9 +1421,36 @@
   }
 
   .header-file-badge span {
-    max-width: 120px;
+    max-width: 100px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .column-filter-dropdown {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    max-width: 320px;
+    z-index: 1000;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    flex-direction: column;
+    gap: var(--space-3);
+    align-items: center;
+    text-align: center;
+  }
+  
+  .header-brand {
+    justify-content: center;
+  }
+  
+  .upload-hero p {
+    font-size: var(--font-size-sm);
   }
 }
