@@ -7,7 +7,7 @@ node_modules/
 **/.env
 *.env.local
 
-# Builds y producción
+# Builds y producciï¿½n
 dist/
 build/
 **/dist/
@@ -26,3 +26,4 @@ Thumbs.db
 
 # Archivos locales de prueba (quitar si necesitas subir el excel)
 *.xlsx
+.vercel

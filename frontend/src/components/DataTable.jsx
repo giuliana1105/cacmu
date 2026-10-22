@@ -165,6 +165,23 @@ function ColumnFilterDropdown({ field, uniqueValues, activeFilters, onFilterChan
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
 
+  // Auto-adjust positioning if overflowing viewport on zoom/small screens
+  useEffect(() => {
+    if (dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      if (rect.bottom > viewportHeight - 10) {
+        const spaceAbove = rect.top;
+        const spaceBelow = viewportHeight - rect.top;
+        if (spaceAbove > spaceBelow && spaceBelow < 260) {
+          dropdownRef.current.style.top = 'auto';
+          dropdownRef.current.style.bottom = 'calc(100% + 4px)';
+          dropdownRef.current.style.transformOrigin = 'bottom left';
+        }
+      }
+    }
+  }, []);
+
   const filteredValues = useMemo(() => {
     if (!searchTerm.trim()) return uniqueValues;
     const term = searchTerm.toLowerCase();
